@@ -8,6 +8,14 @@ existing MCP servers.
 Vocabulary lives in [`CONTEXT.md`](CONTEXT.md); the design decisions in [`docs/adr/`](docs/adr/);
 the full spec in [`toolgate-spec.md`](toolgate-spec.md).
 
+![the live viewer: a recorded call stepped across its boundaries, then five commands decided — allowed, blocked, blocked, allowed, pending](docs/viewer-demo.gif)
+
+*The live viewer. A recorded call is stepped across its boundaries, then five commands go to the real
+gate: `git status` allowed by policy, `helm delete prod-db -n prod` and `cat .env` blocked by policy,
+`git init` allowed on a real judgment, `git remote -v` escalated to a human. The first three never
+reach the model and cost nothing; the last two are judged. Recorded from the public instance with
+[`docs/record_viewer.mjs`](docs/record_viewer.mjs).*
+
 ## Prerequisites
 
 ```bash
@@ -397,7 +405,7 @@ modes are covered by one file and neither is the untested one.
 | `toolgate/interfaces/` | the MCP gateway (primary), the CLI, and the live diagram viewer |
 | `toolgate/container.py` | the one composition root |
 | `demo/` | the runnable demo below |
-| `docs/` | the DDD diagram and its verifier, the viewer's browser verifier, the ADRs, [the technical write-up](docs/technical-write-up.md) (the design: two-phase authorization, the three bands, thresholding), and [the defect record](docs/defect-case-studies.md) |
+| `docs/` | the DDD diagram and its verifier, the viewer's browser verifier and its GIF recorder, the ADRs, [the technical write-up](docs/technical-write-up.md) (the design: two-phase authorization, the three bands, thresholding), and [the defect record](docs/defect-case-studies.md) |
 
 ## Known limitations
 
