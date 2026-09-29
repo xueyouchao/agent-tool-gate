@@ -79,7 +79,17 @@ would take — `clean-call-permit-v1`, `secret-egress-v1`, drift, budget — are
 three billed calls — and the curl comes back `blocked` on `secret-egress-v1` instead of pending:
 `allowed 1  blocked 4  pending 0  approved 1  denied 1`. Exporting an empty variable will not suppress
 it: the MCP client spawns the gateway with a minimal environment, and the gateway reads `.env` itself.
-Move `.env` aside to reproduce the keyless table.
+Move `.env` aside to reproduce the keyless table. The demo narrates each gray call from its response
+rather than assuming an environment, so it describes both runs correctly — it used to print "the judge
+is unreachable" even when the same run had just watched the judge block a call.
+
+A keyed run is committed alongside the keyless one, because it is the only artifact here where phase 2
+decides anything: the curl is blocked by `secret-egress-v1`, and the other two escalate not on an
+outage but because the judge answered and no policy would permit them.
+
+```bash
+python -m toolgate log demo/keyed/decisions.jsonl --approvals demo/keyed/pending_approvals.json
+```
 
 The upstream tool (`demo/upstream_server.py`) executes nothing — it echoes the command back, so the
 demo is safe to run anywhere.
@@ -274,7 +284,7 @@ enough: an inline SVG with no `viewBox` still contains all 10 boxes while showin
 | `toolgate/infrastructure/` | Cedar, Jev over HTTP, the decision record, the policy set, the scrubbed trace |
 | `toolgate/interfaces/` | the MCP gateway (primary), the CLI, and the live diagram viewer |
 | `toolgate/container.py` | the one composition root |
-| `demo/` | the runnable demo |
+| `demo/` | the runnable demo — a keyless run and a keyed run committed side by side |
 | `docs/` | [the design write-up](docs/technical-write-up.md), [the defect record](docs/defect-case-studies.md), the ADRs, the DDD diagram and its verifiers, the GIF recorder and the still capturer, the post's tables |
 
 ## Known limitations

@@ -1,0 +1,118 @@
+{
+  "approvals": {
+    "d26fa4cf": {
+      "call_id": "d26fa4cf",
+      "command": "echo hello",
+      "pattern": "echo hello",
+      "why": {
+        "policy_ids": [],
+        "answers": {
+          "destructive": {
+            "type": "noul",
+            "noul": 0.02
+          },
+          "blast_radius": {
+            "type": "choice",
+            "choice": "user_machine",
+            "confidence": 0.35,
+            "probabilities": {
+              "production": 0.0,
+              "unknown": 0.29,
+              "user_machine": 0.46,
+              "shared_infra": 0.0,
+              "external_third_party": 0.0,
+              "local_workspace": 0.25
+            }
+          },
+          "recoverable": {
+            "type": "noul",
+            "noul": 0.94
+          },
+          "secret_exposure": {
+            "type": "noul",
+            "noul": 0.02
+          },
+          "egress": {
+            "type": "noul",
+            "noul": 0.02
+          },
+          "spends_money": {
+            "type": "noul",
+            "noul": 0.01
+          },
+          "scope_drift": {
+            "type": "noul",
+            "noul": 0.08
+          },
+          "well_formed": {
+            "type": "noul",
+            "noul": 0.96
+          }
+        },
+        "decision_reason": null
+      },
+      "status": "approved_once",
+      "choice": "approve_once",
+      "decided_at": "2026-09-29T22:08:46.972307+00:00"
+    },
+    "6270bb90": {
+      "call_id": "6270bb90",
+      "command": "rm -rf /tmp/build",
+      "pattern": "rm -rf <path>",
+      "why": {
+        "policy_ids": [],
+        "answers": {
+          "destructive": {
+            "type": "noul",
+            "noul": 0.96
+          },
+          "blast_radius": {
+            "type": "choice",
+            "choice": "user_machine",
+            "confidence": 0.85,
+            "probabilities": {
+              "local_workspace": 0.09,
+              "unknown": 0.03,
+              "external_third_party": 0.0,
+              "shared_infra": 0.0,
+              "user_machine": 0.88,
+              "production": 0.0
+            }
+          },
+          "recoverable": {
+            "type": "noul",
+            "noul": 0.4
+          },
+          "secret_exposure": {
+            "type": "noul",
+            "noul": 0.02
+          },
+          "egress": {
+            "type": "noul",
+            "noul": 0.01
+          },
+          "spends_money": {
+            "type": "noul",
+            "noul": 0.01
+          },
+          "scope_drift": {
+            "type": "noul",
+            "noul": 0.38
+          },
+          "well_formed": {
+            "type": "noul",
+            "noul": 0.93
+          }
+        },
+        "decision_reason": null
+      },
+      "status": "denied",
+      "choice": "deny",
+      "decided_at": "2026-09-29T22:08:46.972764+00:00"
+    }
+  },
+  "one_shot_approved": [
+    "echo hello"
+  ],
+  "session_approved": []
+}
