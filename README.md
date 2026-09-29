@@ -275,7 +275,7 @@ enough: an inline SVG with no `viewBox` still contains all 10 boxes while showin
 | `toolgate/interfaces/` | the MCP gateway (primary), the CLI, and the live diagram viewer |
 | `toolgate/container.py` | the one composition root |
 | `demo/` | the runnable demo |
-| `docs/` | [the design write-up](docs/technical-write-up.md), [the defect record](docs/defect-case-studies.md), the ADRs, the DDD diagram and its verifiers, the GIF recorder and the still capturer |
+| `docs/` | [the design write-up](docs/technical-write-up.md), [the defect record](docs/defect-case-studies.md), the ADRs, the DDD diagram and its verifiers, the GIF recorder and the still capturer, the band table |
 
 ## Known limitations
 
