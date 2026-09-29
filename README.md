@@ -14,7 +14,10 @@ the full design spec in [`toolgate-spec.md`](toolgate-spec.md).
 *The live viewer: the newest call stepped across its boundaries — each step opens the message that
 crossing produced, JSON payload included — then five commands put to the real gate, of which two are
 allowed, two blocked by policy and one escalated to a human. Made with
-[`docs/record_viewer.mjs`](docs/record_viewer.mjs).*
+[`docs/record_viewer.mjs`](docs/record_viewer.mjs). A single frame of the same view — a blocked call,
+the policy that blocked it, and the Cedar verdict as JSON — is
+[`docs/viewer-screenshot.png`](docs/viewer-screenshot.png), captured with
+[`docs/capture_still.mjs`](docs/capture_still.mjs).*
 
 ## Prerequisites
 
@@ -272,7 +275,7 @@ enough: an inline SVG with no `viewBox` still contains all 10 boxes while showin
 | `toolgate/interfaces/` | the MCP gateway (primary), the CLI, and the live diagram viewer |
 | `toolgate/container.py` | the one composition root |
 | `demo/` | the runnable demo |
-| `docs/` | [the design write-up](docs/technical-write-up.md), [the defect record](docs/defect-case-studies.md), the ADRs, the DDD diagram and its verifiers, the GIF recorder |
+| `docs/` | [the design write-up](docs/technical-write-up.md), [the defect record](docs/defect-case-studies.md), the ADRs, the DDD diagram and its verifiers, the GIF recorder and the still capturer |
 
 ## Known limitations
 
