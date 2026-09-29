@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ToolGate — DDD Rings</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1f24; --muted:#5b6673;
+    --border:#dfe3e8; --accent:#6C5B7B; --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#0f1216; --panel:#161a20; --ink:#e8edf3; --muted:#9aa7b4;
+    --border:#2a3138; --accent:#C06C84; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    position:sticky; top:0; z-index:10; background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:saturate(180%) blur(12px); border-bottom:1px solid var(--border);
+    padding:13px 20px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  }
+  h1{font-size:15.5px; margin:0; letter-spacing:.01em}
+  .sub{color:var(--muted); font-size:12.5px; margin:0}
+  .spacer{flex:1 1 auto}
+  .controls{display:flex; gap:6px; align-items:center}
+  button{
+    font:inherit; font-size:13px; line-height:1; padding:7px 11px; border-radius:8px; cursor:pointer;
+    background:var(--panel); color:var(--ink); border:1px solid var(--border); box-shadow:var(--shadow);
+  }
+  button:hover{border-color:var(--accent)}
+  button:active{transform:translateY(1px)}
+  #pct{color:var(--muted); font-size:12px; min-width:46px; text-align:center; font-variant-numeric:tabular-nums}
+  main{padding:20px}
+  #canvas{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--shadow); overflow:auto; padding:16px;
+    height:calc(100vh - 168px);
+  }
+  #out svg{display:block}
+  #err{
+    display:none; white-space:pre-wrap; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:#b42318; background:#fef3f2; border:1px solid #fecdca; border-radius:10px; padding:12px 14px; margin:0 0 14px;
+  }
+  footer{color:var(--muted); font-size:12px; padding:2px 20px 22px}
+  footer code{background:color-mix(in srgb,var(--muted) 14%,transparent); padding:1px 5px; border-radius:5px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>ToolGate — DDD Rings</h1>
+    <p class="sub">Outer ring = adapters · middle = application · inner = domain (pure, no I/O)</p>
+  </div>
+  <div class="spacer"></div>
+  <div class="controls">
+    <button id="zoom-out" title="Zoom out">−</button>
+    <span id="pct">100%</span>
+    <button id="zoom-in" title="Zoom in">+</button>
+    <button id="fit" title="Fit the whole diagram in view">fit</button>
+    <button id="theme" title="Toggle light / dark">dark</button>
+  </div>
+</header>
+
+<main>
+  <div id="err"></div>
+  <div id="canvas"><div id="out"></div></div>
+</main>
+
+<footer>
+  Source: <code>docs/toolgate-ddd.mmd</code> — self-contained page, Mermaid inlined, no network required.
+  Edges reflect the real imports in the source tree.
+</footer>
+
+<script type="text/plain" id="diagram-src">__DIAGRAM_SOURCE__</script>
+<script>/*__MERMAID_BUNDLE__*/</script>
+<script>
+(function () {
+  var srcEl    = document.getElementById('diagram-src');
+  var outEl    = document.getElementById('out');
+  var errEl    = document.getElementById('err');
+  var canvas   = document.getElementById('canvas');
+  var pctEl    = document.getElementById('pct');
+  var themeBtn = document.getElementById('theme');
+
+  var source = srcEl.textContent.trim();
+  var scale  = 1;
+  var dark   = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var seq    = 0;
+  var natural = { w: 0, h: 0 };   // full-size SVG dimensions
+
+  function variables() {
+    return dark ? {
+      background:'#161a20', primaryColor:'#242a31', primaryTextColor:'#e8edf3',
+      primaryBorderColor:'#3a444e', lineColor:'#8b98a5', textColor:'#e8edf3',
+      tertiaryColor:'#1b2027', fontSize:'15px'
+    } : {
+      background:'#ffffff', primaryColor:'#ffffff', primaryTextColor:'#1b1f24',
+      primaryBorderColor:'#c9d0d8', lineColor:'#5b6673', textColor:'#1b1f24',
+      tertiaryColor:'#f6f7f9', fontSize:'15px'
+    };
+  }
+
+  // Resize the SVG box (not a CSS transform) so the canvas scrolls correctly.
+  function applyScale() {
+    var svg = outEl.querySelector('svg');
+    if (!svg || !natural.w) return;
+    svg.setAttribute('width',  natural.w * scale);
+    svg.setAttribute('height', natural.h * scale);
+    svg.style.maxWidth = 'none';
+    pctEl.textContent = Math.round(scale * 100) + '%';
+  }
+
+  function fit() {
+    if (!natural.w) return;
+    var availW = canvas.clientWidth  - 34;
+    var availH = canvas.clientHeight - 34;
+    var s = Math.min(availW / natural.w, availH / natural.h, 1);
+    scale = Math.max(0.1, s);
+    applyScale();
+    canvas.scrollTop = 0; canvas.scrollLeft = 0;
+  }
+
+  function draw() {
+    errEl.style.display = 'none';
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    themeBtn.textContent = dark ? 'light' : 'dark';
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme: 'base',
+      themeVariables: variables(),
+      flowchart: { curve:'basis', nodeSpacing:18, rankSpacing:40, useMaxWidth:false, htmlLabels:true }
+    });
+
+    var id = 'tg-graph-' + (++seq);
+    mermaid.render(id, source).then(function (res) {
+      outEl.innerHTML = res.svg;
+      var svg = outEl.querySelector('svg');
+      natural.w = parseFloat(svg.getAttribute('width'))  || svg.getBBox().width;
+      natural.h = parseFloat(svg.getAttribute('height')) || svg.getBBox().height;
+      scale = 1;
+      applyScale();
+      fit();
+    }).catch(function (e) {
+      errEl.style.display = 'block';
+      errEl.textContent = 'Mermaid render failed:\n' + (e && e.message ? e.message : String(e));
+    });
+  }
+
+  document.getElementById('zoom-in').onclick  = function(){ scale = Math.min(3, scale * 1.15); applyScale(); };
+  document.getElementById('zoom-out').onclick = function(){ scale = Math.max(0.1, scale / 1.15); applyScale(); };
+  document.getElementById('fit').onclick      = fit;
+  themeBtn.onclick = function(){ dark = !dark; draw(); };
+
+  var t;
+  window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(fit, 150); });
+
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+%% ============================================================
+%%  ToolGate — DDD / onion rings
+%%  Outer ring = Adapters (interfaces/ + infrastructure/)
+%%  Middle     = Application (application/ use cases)
+%%  Inner      = Domain (domain/, pure — imports nothing outward)
+%%  Edges are the REAL imports from the source (verified by grep).
+%% ============================================================
+flowchart TB
+
+%% ---------- Styling ----------
+classDef domain fill:#6C5B7B,stroke:#355C7D,stroke-width:2px,color:#FFF,font-weight:bold;
+classDef app fill:#C06C84,stroke:#6C5B7B,stroke-width:2px,color:#FFF,font-weight:bold;
+classDef infra fill:#F67280,stroke:#C06C84,stroke-width:2px,color:#FFF,font-weight:bold;
+classDef component fill:#FFF,stroke:#333,stroke-width:1px,color:#000;
+classDef external fill:#EEF2F7,stroke:#94A3B8,stroke-width:1px,color:#0F172A;
+classDef gap fill:#FFF7ED,stroke:#F59E0B,stroke-width:2px,stroke-dasharray:4 3,color:#7C2D12;
+
+%% ---------- Outer ring: Adapters ----------
+subgraph Adapter_Ring ["⭕ Adapter Ring — interfaces/ + infrastructure/"]
+direction TB
+
+  subgraph Driving_Adapters ["📥 Primary (Driving) Adapters — interfaces/"]
+    direction TB
+    GW["MCP stdio gateway<br/>ToolGateProxy"]:::component
+    CLI["toolgate CLI<br/>log · approve · prompt"]:::component
+    View["Viewer<br/>live diagram · topology geometry"]:::component
+  end
+
+  subgraph Driven_Adapters ["📤 Secondary (Driven) Adapters — infrastructure/"]
+    direction TB
+    PolicySet["PolicySet<br/>schema + both policies + version"]:::component
+    CedarAuth["CedarEmbeddedAuthorizer<br/>embedded cedarpy · validates at load"]:::component
+    Jev["JevClient<br/>TypeSafe systemone · HTTP"]:::component
+    Record["DecisionRecord<br/>append · queue · joined read view"]:::component
+    Stores["JsonlLog · ApprovalStore<br/>decisions.jsonl · pending_approvals.json"]:::component
+    Trace["TraceLog<br/>traces.jsonl · boundary trace · scrubbed by default"]:::component
+    Normalizer["normalize · scrub_command · scrub_payload<br/>garbage-in · redaction"]:::component
+  end
+
+  %% ---------- Middle ring: Application ----------
+  subgraph Application_Ring ["⭕ Application Ring — application/ (use cases)"]
+  direction TB
+
+    Engine["Engine<br/>authorize use case · 2 phases"]:::component
+    Ports["application/ports.py<br/>Authorizer · DecisionLog · Jev · Trace"]:::component
+    Slot["SessionSlot<br/>one decision at a time"]:::component
+    NoSeam["⚠ normalize · scrub_command<br/>still bare functions — no seam"]:::gap
+
+    %% ---------- Inner ring: Domain ----------
+    subgraph Domain_Ring ["🎯 Domain Ring — domain/ (pure, no I/O)"]
+    direction TB
+      subgraph Domain_Model ["📦 Model & decision logic"]
+        direction TB
+        Model["domain/model.py<br/>Principal · AuthzResult · Budget · Approval"]:::component
+        Decision["thresholds.py · battery.py<br/>bands · drift · 8 questions · JevResponse"]:::component
+      end
+      subgraph Domain_Rules ["🛡️ Rules as data"]
+        direction TB
+        Cedar["gate.cedar · judgment.cedar<br/>phase 1 static · phase 2 Jev-enriched"]:::component
+      end
+    end
+  end
+end
+
+%% ---------- External systems (outside every ring) ----------
+Agent["MCP agent"]:::external
+Browser["a browser"]:::external
+Upstream["Upstream MCP servers"]:::external
+TypeSafe["TypeSafe Jev API"]:::external
+
+%% ---------- Layer styles ----------
+class Domain_Ring,Domain_Model,Domain_Rules domain;
+class Application_Ring app;
+class Adapter_Ring,Driving_Adapters,Driven_Adapters infra;
+
+%% ---------- Dependency rules (outer points inward) ----------
+Agent -->|tools/call| GW
+GW -.->|authorize| Engine
+
+%% use case uses the pure core
+Engine -->|model| Model
+Engine -->|thresholds · drift| Decision
+Engine -->|serializes one session| Slot
+
+%% the ports the use case drives; adapters satisfy them
+Engine -->|depends on| Ports
+Ports -.->|implemented by| CedarAuth
+Ports -.->|implemented by| Jev
+Ports -.->|implemented by| Record
+Ports -.->|implemented by| Trace
+
+%% the trace redacts with the same rule set as the decision log
+Trace -.->|redacts with| Normalizer
+
+%% the composition root loads and validates the policy artifacts
+PolicySet -.->|loads| Cedar
+PolicySet -.->|builds| CedarAuth
+
+%% the record owns both stores; the CLI reads the joined view
+Record -.->|writes| Stores
+CLI -.->|records · pending · decide| Record
+
+%% the viewer reads the same two stores, and redraws the journey they describe
+View -.->|records · pending| Record
+View -.->|fills in boundaries| Trace
+Browser -.->|polls once a second| View
+
+%% still concrete: the use case reaches straight into these adapters
+Engine -.->|normalize · scrub| Normalizer
+
+%% driven adapters depend inward on the domain
+CedarAuth -.->|AuthzResult| Model
+Jev -.->|validate response| Decision
+Normalizer -.->|Principal| Model
+Record -.->|Approval| Model
+
+%% system boundary
+GW -.->|forward on ALLOW| Upstream
+Jev -.->|HTTPS| TypeSafe

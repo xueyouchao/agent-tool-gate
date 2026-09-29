@@ -1,0 +1,26 @@
+[project]
+name = "toolgate"
+version = "0.1.0"
+description = "A tool-call authorization guardrail (MCP gateway)"
+requires-python = ">=3.10"
+dependencies = ["cedarpy==4.12.0", "mcp==2.2.0", "dependency-injector==4.49.1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+# Without an explicit include list, setuptools' auto-discovery sees demo/, docs/ and tests/ as
+# candidate top-level packages and refuses to build. The policies are data, not modules — they
+# must be declared or an installed (non-editable) ToolGate cannot find its own Cedar files.
+[tool.setuptools.packages.find]
+include = ["toolgate*"]
+
+[tool.setuptools.package-data]
+"toolgate.domain.policies" = ["*.cedar"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

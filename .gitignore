@@ -1,0 +1,30 @@
+# ── secrets — never commit ────────────────────────────────────────────────
+.env
+*.pem
+*.key
+
+# ── runtime artifacts ─────────────────────────────────────────────────────
+# Anchored to the repo root on purpose: `demo/decisions.jsonl` and `demo/traces.jsonl`
+# are fixtures the README's walkthrough reads, so they ARE committed, while these
+# root-level files are what a local `toolgate view` / `--trace-raw` run writes.
+/decisions.jsonl
+/traces.jsonl
+/spans.jsonl
+/pending_approvals.json
+
+# ── python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+
+# ── scratch and tooling output ────────────────────────────────────────────
+.scratch/
+.tmp/
+.understand-anything/
+diagrams/

