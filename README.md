@@ -10,11 +10,12 @@ the full spec in [`toolgate-spec.md`](toolgate-spec.md).
 
 ![the live viewer: a recorded call stepped across its boundaries, then five commands decided — allowed, blocked, blocked, allowed, pending](docs/viewer-demo.gif)
 
-*The live viewer. A recorded call is stepped across its boundaries, then five commands go to the real
-gate: `git status` allowed by policy, `helm delete prod-db -n prod` and `cat .env` blocked by policy,
-`git init` allowed on a real judgment, `git remote -v` escalated to a human. The first three never
-reach the model and cost nothing; the last two are judged. Recorded from the public instance with
-[`docs/record_viewer.mjs`](docs/record_viewer.mjs).*
+*The live viewer. The newest call is stepped across its boundaries — each step opens the message that
+crossing produced, JSON payload included — then five commands go to the real gate: `git status` allowed
+by policy, `helm delete prod-db -n prod` and `cat .env` blocked by policy, `git init` allowed on a real
+judgment, `git remote -v` escalated to a human. The first three never reach the model and cost nothing;
+the last two are judged. Recorded at 900×1000 — close to a README's own column width — so the per-step
+payload stays readable. Made with [`docs/record_viewer.mjs`](docs/record_viewer.mjs).*
 
 ## Prerequisites
 

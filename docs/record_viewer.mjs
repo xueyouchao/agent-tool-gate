@@ -22,6 +22,15 @@ const URL_UNDER_TEST = process.argv[2] || 'http://127.0.0.1:8770/';
 const OUT = process.argv[3] || '/tmp/toolgate-gif/frames';
 const PORT = Number(process.env.CDP_PORT || 9444);
 const INTERVAL = Number(process.env.FRAME_MS || 120);   // ~8 fps
+// The viewport is the legibility control, and it is not obvious: a README renders an image at its
+// own column width (~830 px), so an image captured at 1366 and downscaled to 900 is then shown at
+// 900/1366 × 830/900 of native — the text lands at ~61% and the per-step payload is unreadable. The
+// only lever is *how much content* sits across the image, so capture at close to the column width
+// and do not downscale afterwards. Height and scroll decide what is in frame: the step details live
+// in #detail, which starts around y=675 at this width and runs for thousands of pixels.
+const VW = Number(process.env.VIEWPORT_W || 900);
+const VH = Number(process.env.VIEWPORT_H || 1000);
+const SCROLL_Y = Number(process.env.SCROLL_Y || 0);
 
 mkdirSync(OUT, { recursive: true });
 
@@ -73,10 +82,9 @@ async function evaluate(expression) {
 
 await send('Runtime.enable');
 await send('Page.enable');
-// The laptop size verify_viewer.mjs proved keeps the submit box above the fold. Recording at a size
-// where the controls are off-screen would produce a GIF of a diagram and nothing else.
+// The viewport decides what is in frame and how legible it ends up (see the note at VW/VH above).
 await send('Emulation.setDeviceMetricsOverride',
-  { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false });
+  { width: VW, height: VH, deviceScaleFactor: 1, mobile: false });
 await send('Page.navigate', { url: URL_UNDER_TEST });
 
 let built = 0;
@@ -121,6 +129,8 @@ const captureLoop = (async () => {
 const log = [];
 const verdict = () => evaluate(`document.getElementById('verdict').textContent`);
 const where = () => evaluate(`document.getElementById('where').textContent`);
+const detail = async () =>
+  (await evaluate(`document.getElementById('detail').textContent`)).replace(/\s+/g, ' ').trim();
 
 async function submit(command) {
   await evaluate(`(() => { const i = document.getElementById('cmd'); i.value = ''; i.focus(); })()`);
@@ -136,33 +146,47 @@ async function submit(command) {
       i.value = ${JSON.stringify(command)}; })()`);
   }
   await evaluate(`document.getElementById('run').click()`);
-  await sleep(2200);
+  await sleep(1900);
   const v = (await verdict()).replace(/\s+/g, ' ').trim();
-  log.push({ command, verdict: v, where: (await where()).replace(/\s+/g, ' ').trim() });
+  log.push({ kind: 'submit', command, verdict: v,
+             detail: (await detail()).slice(0, 110) });
 }
 
-console.log(`\n  recording ${URL_UNDER_TEST}  →  ${OUT}\n`);
+console.log(`\n  recording ${URL_UNDER_TEST}  (${VW}×${VH}, scroll ${SCROLL_Y})  →  ${OUT}\n`);
 
-// 1. open on the parked diagram, then walk the newest call one boundary at a time
-await sleep(1600);
-for (let i = 0; i < 3; i++) { await evaluate(`document.getElementById('step').click()`); await sleep(950); }
-await evaluate(`document.querySelector('[data-id="gate"]')
-  .dispatchEvent(new MouseEvent('click', { bubbles: true }))`);
-await sleep(1400);
+await sleep(1200);
+if (SCROLL_Y) await evaluate(`window.scrollTo(0, ${SCROLL_Y})`);
+await sleep(900);
+
+// Walk the newest call one boundary at a time. This is the part that was missing from the first
+// recording: the per-step message lives in #detail, which sits below the fold at a laptop height,
+// so the GIF showed the packet moving and none of what each crossing produced. Report what each step
+// put in the panel, because "the payload is in frame" is the claim the recording exists to support.
+for (let i = 0; i < 4; i++) {
+  await evaluate(`document.getElementById('step').click()`);
+  await sleep(950);
+  log.push({ kind: 'step', where: (await where()).replace(/\s+/g, ' ').trim(),
+             detail: (await detail()).slice(0, 110) });
+}
+await evaluate(`document.getElementById('back').click()`);
+await sleep(900);
+log.push({ kind: 'back', where: (await where()).replace(/\s+/g, ' ').trim(),
+           detail: (await detail()).slice(0, 110) });
+await sleep(400);
 
 if (canDecide) {
   // 2. the fast path: a read-only repo command is permitted by policy, and the model never sees it
   await submit('git status');
-  await sleep(900);
+  await sleep(600);
   // 3. a production delete-class verb is forbidden by policy outright
   await submit('helm delete prod-db -n prod');
-  await sleep(900);
+  await sleep(600);
   // 4. a credential store is forbidden by path
   await submit('cat .env');
-  await sleep(900);
+  await sleep(600);
   // 5. the gray middle: policy cannot decide, so this one is really judged (~$0.00007)
   await submit('git init');
-  await sleep(900);
+  await sleep(600);
   // 6. and a call the judgment will not vouch for lands in the human band
   await submit('git remote -v');
   await sleep(1600);
@@ -177,8 +201,14 @@ stop();
 
 console.log(`  ${frames.length} frames captured\n`);
 if (log.length) {
-  console.log('  what each submission was actually decided as:');
-  for (const e of log) console.log(`    ${e.command.padEnd(30)} → ${e.verdict}`);
+  console.log('  what the recording actually put on screen:');
+  for (const e of log) {
+    if (e.kind === 'submit') {
+      console.log(`    submit  ${e.command.padEnd(28)} → ${e.verdict}`);
+    } else {
+      console.log(`    ${e.kind.padEnd(7)} ${e.where.padEnd(28)} → ${e.detail}`);
+    }
+  }
   console.log('');
 }
 writeFileSync(join(OUT, '..', 'verdicts.json'), JSON.stringify({ url: URL_UNDER_TEST, log }, null, 2));
