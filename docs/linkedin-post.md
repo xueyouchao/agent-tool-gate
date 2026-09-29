@@ -81,7 +81,7 @@ premise — it is one line, and it is in the README's known limitations.
 Try it here: https://toolgate.srv1567269.hstgr.cloud/ (the decide box runs the real gate — it authorizes
 and records; it does not execute) and have fun.
 
-Source code: [link to add]
+Source code: https://github.com/xueyouchao/agent-tool-gate
 
 Deeper write-ups in the repo: [the design](technical-write-up.md) — two-phase authorization, the three
 bands, thresholding — and [the three defects](defect-case-studies.md), with their measurements.
