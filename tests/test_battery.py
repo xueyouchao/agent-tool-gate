@@ -52,10 +52,14 @@ def test_every_question_feeds_a_context_attribute():
 
 
 def test_adapter_defaults_declare_every_context_field():
-    """Cedar requires every declared field present, including on the phase-1 path."""
+    """Cedar requires every declared field present, including on the phase-1 path.
+
+    `single_command` is adapter-derived like the other four: it is structural, so no model is asked
+    about it and no battery question feeds it.
+    """
     assert set(PHASE2_CONTEXT_DEFAULTS) == _CONTEXT_ATTRS | {"confidence_floor"}
     assert set(DERIVED_CONTEXT_FIELDS) == {"tool", "subcommand", "command", "reads_secret_path",
-                                           "confidence_floor"}
+                                           "single_command", "confidence_floor"}
 
 
 def test_exactly_one_choice_question_supplies_the_blast_radius_options():

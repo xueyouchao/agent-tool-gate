@@ -25,7 +25,7 @@ PHASE2_CONTEXT_DEFAULTS = {
 
 # Context fields no battery question feeds: four the adapter parses, one thresholding derives.
 # Declared so `tests/test_battery.py` can account for every field the schema declares.
-DERIVED_CONTEXT_FIELDS = ("tool", "subcommand", "command", "reads_secret_path",
+DERIVED_CONTEXT_FIELDS = ("tool", "subcommand", "command", "reads_secret_path", "single_command",
                           "confidence_floor")
 
 DELETE_SUBCOMMANDS = ("delete", "uninstall", "purge", "destroy", "drop", "truncate")
@@ -143,6 +143,34 @@ def _detects_secret_read(command: str) -> bool:
     return any(shape in command for shape in SECRET_PATH_SHAPES)
 
 
+# Operators that make one command string into more than one command, or into a redirection.
+SHELL_OPERATORS = (";", "&&", "||", "|", "&", "(", ")", "<", ">", ">>", "<<", "`")
+
+
+def _is_single_command(command: str) -> bool:
+    """Whether *command* is one simple command: no operator, no substitution, no newline.
+
+    A phase-1 permit is a bypass of phase 2 by construction — an ALLOW there never reaches Jev — so
+    it must be safe standing alone. `read-only-repo-permit-v1` was not: it read only the first two
+    tokens, so `git status ; rm -rf /workspace` normalized to tool="git", subcommand="status",
+    matched the permit, and was allowed with neither a policy nor the judgment model ever looking at
+    the `rm`. This is the fact that closes it.
+
+    The check is structural, not textual. `shlex` with `punctuation_chars` respects quoting, so
+    `git log --grep="a;b"` is correctly one command. But a newline is whitespace to shlex and leaves
+    no trace in the token stream, so it is checked in the raw string. Erring is not symmetric: a
+    false positive only sends a call to the judgment band, while a false negative is an allow nobody
+    reviewed — so this errs toward `False`.
+    """
+    if "\n" in command or "\r" in command:
+        return False
+    try:
+        tokens = list(shlex.shlex(command, posix=True, punctuation_chars="();<>|&;"))
+    except ValueError:  # an unbalanced quote: unparseable is not the same as simple
+        return False
+    return not any(token in SHELL_OPERATORS for token in tokens)
+
+
 def normalize(command: str, principal: Principal, cwd: str = "/workspace") -> tuple[list[dict], dict]:
     """Return ``(entities, request)`` for a single tool call's command string."""
     tokens = shlex.split(command) if command.strip() else []
@@ -161,6 +189,7 @@ def normalize(command: str, principal: Principal, cwd: str = "/workspace") -> tu
         "subcommand": subcommand,
         "command": command,
         "reads_secret_path": _detects_secret_read(command),
+        "single_command": _is_single_command(command),
         **PHASE2_CONTEXT_DEFAULTS,
     }
 

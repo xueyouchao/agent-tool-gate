@@ -171,6 +171,7 @@ namespace toolgate {
     context: {
       tool: String, subcommand: String, command: String,
       reads_secret_path: Bool,            // deterministic adapter detection
+      single_command: Bool,               // deterministic adapter detection — see §4
       // phase-2 only (filled by the thresholding layer):
       is_destructive: Bool, is_recoverable: Bool, intent_match: Bool,
       injected: Bool, secret_exposure: Bool, egress: Bool,

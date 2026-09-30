@@ -14,6 +14,7 @@ namespace toolgate {
       subcommand: String,
       command: String,
       reads_secret_path: Bool,
+      single_command: Bool,
       is_destructive: Bool,
       is_recoverable: Bool,
       intent_match: Bool,
