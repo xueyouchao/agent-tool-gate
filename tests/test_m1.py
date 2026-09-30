@@ -86,7 +86,7 @@ def test_secret_path_blocks(authorizer, principal):
     entities, request = normalize("rm ~/.ssh/config", principal)
     res = authorizer.authorize(request, entities)
     assert res.decision == "DENY"
-    assert res.determining_policies == ["secrets-never-writable-v1"]
+    assert res.determining_policies == ["secret-zone-off-limits-v1"]
 
 
 def test_adapter_sets_reads_secret_path(principal):
@@ -112,7 +112,7 @@ def test_a_credential_store_is_hidden_and_refused_however_it_is_written(authoriz
         entities, request = normalize(command, principal)
         res = authorizer.authorize(request, entities)
         assert res.decision == "DENY", path                      # and refused by the gate
-        assert res.determining_policies == ["secrets-never-writable-v1"], path
+        assert res.determining_policies == ["secret-zone-off-limits-v1"], path
 
 
 def test_the_scrubber_covers_every_declared_shape():
@@ -124,7 +124,7 @@ def test_the_scrubber_covers_every_declared_shape():
 def test_a_secret_reference_that_is_only_an_argument_stays_in_the_gray_middle(authorizer, principal):
     """The other half of the bargain: merely *naming* a store is not a phase-1 forbid.
 
-    `secrets-never-writable-v1` matches `resource.zone == "secret"`, which the adapter sets only for
+    `secret-zone-off-limits-v1` matches `resource.zone == "secret"`, which the adapter sets only for
     a file operation on a store. A command that passes one as data — here a curl payload — carries
     `reads_secret_path` instead and must reach the judgment model, where `secret-egress-v1` judges
     the intent. Widening the zone to every mention would swallow that case.

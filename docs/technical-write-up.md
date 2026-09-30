@@ -149,12 +149,13 @@ Phase 1 is a small, deliberately enumerated policy set over parsed facts. In thi
 four policies:
 
 ```cedar
-// A path the adapter mapped into the secret zone is off-limits for ANY action, not just writes —
-// despite the id. `context.reads_secret_path` is the adapter's other secret signal; it is
-// deliberately NOT a phase-1 forbid, because a command that merely *references* a secret path
-// (e.g. `curl -d @~/.ssh/config`) must stay GRAY and reach judgment, where `secret-egress-v1`
-// judges the intent.
-@id("secrets-never-writable-v1")
+// A path the adapter mapped into the secret zone is off-limits for ANY action, which is what the id
+// now says: `action` is deliberately unconstrained, because a *read* of a credential store is the
+// exfiltration path — blocking only writes would be backwards. `context.reads_secret_path` is the
+// adapter's other secret signal; it is deliberately NOT a phase-1 forbid, because a command that
+// merely *references* a secret path (e.g. `curl -d @~/.ssh/config`) must stay GRAY and reach
+// judgment, where `secret-egress-v1` judges the intent.
+@id("secret-zone-off-limits-v1")
 forbid (principal, action, resource)
 when { resource.zone == "secret" };
 

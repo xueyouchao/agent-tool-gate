@@ -343,7 +343,7 @@ Rules:
 ### `gate.cedar` (phase 1 — static facts)
 
 ```cedar
-@id("secrets-never-writable-v1")
+@id("secret-zone-off-limits-v1")
 forbid (principal, action, resource)
 when { resource.zone == "secret" };
 

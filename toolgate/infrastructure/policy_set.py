@@ -15,13 +15,13 @@ from .authorizer import CedarEmbeddedAuthorizer
 
 # Authored artifact versions (spec §10) — a provenance label, not a hash. Bump the matching
 # component whenever the artifact changes; `tests/test_policy_version.py` fails until you do.
-POLICY_VERSION = "gate=v2,judgment=v1,thresholds=v1,battery=v1"
+POLICY_VERSION = "gate=v3,judgment=v1,thresholds=v1,battery=v1"
 
 # Each artifact as it stood when POLICY_VERSION was authored. The pin is a checkpoint, not a
 # proof: it cannot tell a bump from a re-pin, it only guarantees a policy edit stops here.
 AUTHORED_DIGESTS: dict[str, str] = {
     "schema.cedar": "sha256:3256b5084602aebabb83ac0f2f748157b4081773ad87edd50ae5c7124f6fbd9f",
-    "gate.cedar": "sha256:6769ca3c6066394504ba9ccb5af8a1a40794369113bb58417497f25b0ea04ed6",
+    "gate.cedar": "sha256:cfac35b28151d0734ab0c025c6cb39a1dd8062c7ed06cebf34986fad1549d175",
     "judgment.cedar": "sha256:1deebd41627dae45c3045e350b239a573eaf9004ea0e8aef03c854d3474c3fc6",
 }
 
